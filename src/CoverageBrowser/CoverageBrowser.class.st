@@ -103,6 +103,13 @@ CoverageBrowser >> defaultLayout [
 ]
 
 { #category : #'accessing - model' }
+CoverageBrowser >> filteredMethods [ 
+
+	^ self methods reject: [ :aMethod | 
+		self isIgnored: aMethod ]
+]
+
+{ #category : #'accessing - model' }
 CoverageBrowser >> iconFor: compiledMethod [
 
 	| ratio | 
@@ -131,7 +138,7 @@ CoverageBrowser >> initializePresenters [
 	methodsList := self newTable beResizable.
 	codePresenter := self newCode.
 	
-	methodsList items: (self methods sorted: [ :a :b | a name <= b name ]).	
+	methodsList items: (self filteredMethods sorted: [ :a :b | a name <= b name ]).	
 
 	methodsList addColumn:
 		(SpStringTableColumn title: 'Class' evaluated: [ :cm |  cm methodClass ]).
@@ -159,6 +166,24 @@ CoverageBrowser >> initializePresenters [
 				self addHighlightsTo: destination for: transmited	 ] ]
 		
 	
+]
+
+{ #category : #'accessing - model' }
+CoverageBrowser >> isIgnored: aMethod [ 
+
+	(aMethod hasPragmaNamed: #ignoreForCoverage)
+		ifTrue: [ ^ true ].
+		
+	aMethod methodClass instanceSide isManifest 
+		ifTrue: [ ^ true ].
+
+	aMethod isSubclassResponsibility		
+		ifTrue: [ ^ true ].
+
+	aMethod isExplicitlyRequired		
+		ifTrue: [ ^ true ].
+		
+	^ false 
 ]
 
 { #category : #'accessing - model' }
